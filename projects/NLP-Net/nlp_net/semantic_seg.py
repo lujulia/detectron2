@@ -112,7 +112,7 @@ class PanopticLMFFNetSemSegHead(nn.Module):
         loss_weight: float = 1.0,
         #loss_type: str,
         #loss_top_k: float,
-        ignore_value: int = -100,#255,#-1,
+        ignore_value: int = 255,#-1,
         #num_classes: int,
         **kwargs,
     ):
