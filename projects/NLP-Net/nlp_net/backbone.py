@@ -14,6 +14,7 @@ from detectron2.utils.registry import Registry
 from detectron2.layers import ShapeSpec
 
 from detectron2.modeling import BACKBONE_REGISTRY, Backbone, ShapeSpec
+from .loss import L_color, L_spa, L_exp, L_TV
 
 __all__ = ["Conv",
            "conv3x3_resume",
@@ -85,18 +86,62 @@ class BNPReLU(nn.Module):
         return output
 
 
+def weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        m.weight.data.normal_(0.0, 0.02)
+    elif classname.find('BatchNorm') != -1:
+        m.weight.data.normal_(1.0, 0.02)
+        m.bias.data.fill_(0)
+
 class Init_Block(nn.Module):
-    def __init__(self, in_channels=3, out_channels=32):
+    def __init__(self):
         super(Init_Block, self).__init__()
-        self.init_conv = nn.Sequential(
-            Conv(in_channels, out_channels, 3, 2, padding=1, bn_acti=True),
-            Conv(out_channels, out_channels, 3, 1, padding=1, bn_acti=True),
-            Conv(out_channels, out_channels, 3, 1, padding=1, bn_acti=True),
-        )
+        number_f = 32
+        self.conv = nn.Conv2d(6,number_f,3,2,1,bias=True) 
+        self.e_conv1 = nn.Conv2d(3,number_f,3,1,1,bias=True) 
+        self.e_conv2 = nn.Conv2d(number_f,number_f,3,1,1,bias=True) 
+        self.e_conv3 = nn.Conv2d(number_f,number_f,3,1,1,bias=True) 
+        self.e_conv4 = nn.Conv2d(number_f,number_f,3,1,1,bias=True) 
+        self.e_conv5 = nn.Conv2d(number_f*2,number_f,3,1,1,bias=True) 
+        self.e_conv6 = nn.Conv2d(number_f*2,number_f,3,1,1,bias=True) 
+        self.e_conv7 = nn.Conv2d(number_f*2,24,3,1,1,bias=True) 
+
+		#self.maxpool = nn.MaxPool2d(2, stride=2, return_indices=False, ceil_mode=False)
+		#self.upsample = nn.UpsamplingBilinear2d(scale_factor=2)
+        self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x):
-        o = self.init_conv(x)
-        return o
+        x_o = x
+        x1 = self.relu(self.e_conv1(x))
+        # p1 = self.maxpool(x1)
+        x2 = self.relu(self.e_conv2(x1))
+        # p2 = self.maxpool(x2)
+        x3 = self.relu(self.e_conv3(x2))
+        # p3 = self.maxpool(x3)
+        x4 = self.relu(self.e_conv4(x3))
+
+        x5 = self.relu(self.e_conv5(torch.cat([x3,x4],1)))
+        # x5 = self.upsample(x5)
+        x6 = self.relu(self.e_conv6(torch.cat([x2,x5],1)))
+
+        x_r = F.tanh(self.e_conv7(torch.cat([x1,x6],1)))
+        r1,r2,r3,r4,r5,r6,r7,r8 = torch.split(x_r, 3, dim=1)
+
+        x = x + r1*(torch.pow(x,2)-x)
+        x = x + r2*(torch.pow(x,2)-x)
+        x = x + r3*(torch.pow(x,2)-x)
+        enhance_image_1 = x + r4*(torch.pow(x,2)-x)		
+        x = enhance_image_1 + r5*(torch.pow(enhance_image_1,2)-enhance_image_1)		
+        x = x + r6*(torch.pow(x,2)-x)	
+        x = x + r7*(torch.pow(x,2)-x)
+        enhance_image = x + r8*(torch.pow(x,2)-x)
+        r = torch.cat([r1,r2,r3,r4,r5,r6,r7,r8],1)
+        x_new = torch.cat([enhance_image,x_o],1)
+        o = self.relu(self.conv(x_new))
+        o = self.relu(self.e_conv2(o))
+        o = self.relu(self.e_conv3(o))
+        return o,enhance_image,r
 
 
 class SEM_B(nn.Module):
@@ -329,7 +374,7 @@ class LMFFNetBackbone(Backbone):
         super().__init__()
         self.block_1 = block_1
         self.block_2 = block_2
-        self.Init_Block = Init_Block()
+        self.Init_Block = Init_Block().apply(weights_init)
 
         self.down_1 = InputInjection(1)  # down-sample the image 1 times
         self.down_2 = InputInjection(2)  # down-sample the image 2 times
@@ -348,12 +393,16 @@ class LMFFNetBackbone(Backbone):
         self.SEM_B_Block2 = SEM_B_Block2(num_channels=128, num_block=self.block_2, dilation=[4, 4, 8, 8, 16, 16, 32, 32], flag=2)
 
         self.FFM_B2 = FFM_B(ch_in=256 + 3, ch_pmca=128)
-
+	    
+        self.L_color = L_color()
+        self.L_spa = L_spa()
+        self.L_exp = L_exp(16,0.6)
+        self.L_TV = L_TV()
 
     def forward(self, input):
         # Init Block
-        out_init_block = self.Init_Block(input)
-        down_1 = self.down_1(input)
+        out_init_block, enhance_image,r = self.Init_Block(input)
+        down_1 = self.down_1(enhance_image)
         input_ffm_a = out_init_block, down_1
 
         # FFM-A
@@ -364,7 +413,7 @@ class LMFFNetBackbone(Backbone):
         out_sem_block1 = self.SEM_B_Block1(out_downsample_1)
 
         # FFM-B1
-        down_2 = self.down_2(input)
+        down_2 = self.down_2(enhance_image)
         input_sem1_pmca1 = out_sem_block1, out_downsample_1, down_2
         out_ffm_b1 = self.FFM_B1(input_sem1_pmca1)
 
@@ -373,19 +422,28 @@ class LMFFNetBackbone(Backbone):
         out_se_block2 = self.SEM_B_Block2(out_downsample_2)
 
         # FFM-B2
-        down_3 = self.down_3(input)
+        down_3 = self.down_3(enhance_image)
         input_sem2_pmca2 = out_se_block2, out_downsample_2, down_3
         out_ffm_b2 = self.FFM_B2(input_sem2_pmca2)
 
         # MAD
         #input_ffmb1_ffmb2 = out_ffm_b1, out_ffm_b2
         #out_mad = self.MAD(input_ffmb1_ffmb2)
-
-        return {"FFM-B1":out_ffm_b1,"FFM-B2":out_ffm_b2}
+        if self.training:
+            return {"FFM-B1":out_ffm_b1,"FFM-B2":out_ffm_b2}, self.losses(input,enhance_image,r)#, weights)
+        else:
+            return {"FFM-B1":out_ffm_b1,"FFM-B2":out_ffm_b2}, {}
     
     def output_shape(self):
-        return {"FFM-B1": ShapeSpec(channels=128+3, stride=1),"FFM-B2": ShapeSpec(channels=256+3, stride=1)}
-
+        return {"FFM-B1": ShapeSpec(channels=128+3, stride=1),"FFM-B2": ShapeSpec(channels=256+3, stride=1), "Enhance":ShapeSpec(channels=3, stride=1),"FACTOR":ShapeSpec(channels=24, stride=1)}
+    
+    def losses(self, original, enhance, factor):#, weights=None):
+        loss_tv = self.L_TV(factor)
+        loss_spa = torch.mean(self.L_spa(enhance, original))
+        loss_col = torch.mean(self.L_color(enhance))
+        loss_exp = torch.mean(self.L_exp(enhance))
+        losses = {"loss_ill_enh": 200*loss_tv+loss_spa+5*loss_col+10*loss_exp}
+        return losses
 
 @BACKBONE_REGISTRY.register()
 def build_lmffnet_backbone(cfg, input_shape=None):

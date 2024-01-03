@@ -74,13 +74,15 @@ class PanopticLMFFNet(nn.Module):
                     :doc:`/tutorials/models` for the standard output format
         """
         images = [x["image"].to(self.device) for x in batched_inputs]
-        images = [(x - self.pixel_mean) / self.pixel_std for x in images]
+        #images = [(x - self.pixel_mean) / self.pixel_std for x in images]
+        images = [(x - 0) / 255.0 for x in images]
         # To avoid error in ASPP layer when input has different size.
 
         images = ImageList.from_tensors(images)
 
-        features = self.backbone(images.tensor)
-
+        features, ill_enh_losses = self.backbone(images.tensor)
+        losses = {}
+        losses.update(ill_enh_losses)
         losses = {}
         if "sem_seg" in batched_inputs[0]:
             targets = [x["sem_seg"].to(self.device) for x in batched_inputs]
