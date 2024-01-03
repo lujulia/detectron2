@@ -83,7 +83,6 @@ class PanopticLMFFNet(nn.Module):
         features, ill_enh_losses = self.backbone(images.tensor)
         losses = {}
         losses.update(ill_enh_losses)
-        losses = {}
         if "sem_seg" in batched_inputs[0]:
             targets = [x["sem_seg"].to(self.device) for x in batched_inputs]
             targets = ImageList.from_tensors(
