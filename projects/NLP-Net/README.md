@@ -1,4 +1,4 @@
-# Night Panoptic-LMFFNet: 
+# Night Panoptic-LMFFNet (NLP-Net): 
 
 I-CHEN LU
 
