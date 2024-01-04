@@ -50,7 +50,7 @@ class Clahe(T.Augmentation):
     def __init__(self):
         self._init(locals())
 
-    def get_transform(self, image):
+    def get_transform(self):
         return ClaheTransform()
     
 class ClaheTransform(T.Transform):
@@ -73,7 +73,7 @@ class ClaheTransform(T.Transform):
         return coords
 
     def apply_segmentation(self, segmentation):
-        segmentation = self.apply_image(segmentation)
+        #segmentation = self.apply_image(segmentation)
         return segmentation
 
     def inverse(self):

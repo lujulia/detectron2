@@ -324,6 +324,7 @@ class SEM_B_Block2(nn.Module):
         o = self.SEM_B8(x)
         return o
 
+
 @BACKBONE_REGISTRY.register()
 class LMFFNetBackbone(Backbone):
     def __init__(self, block_1=3, block_2=8):
