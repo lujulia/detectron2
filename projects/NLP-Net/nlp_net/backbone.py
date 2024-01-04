@@ -324,50 +324,6 @@ class SEM_B_Block2(nn.Module):
         o = self.SEM_B8(x)
         return o
 
-
-class MAD(nn.Module):
-    def __init__(self, c1=16, c2=32, classes=19):
-        super(MAD, self).__init__()
-        self.c1, self.c2 = c1, c2
-        self.LMFFNet_Block_2 = nn.Sequential()
-
-        self.mid_layer_1x1 = Conv(128 + 3, c1, 1, 1, padding=0, bn_acti=False)
-
-        self.deep_layer_1x1 = Conv(256 + 3, c2, 1, 1, padding=0, bn_acti=False)
-
-        self.DwConv1 = Conv(self.c1 + self.c2, self.c1 + self.c2, (3, 3), 1, padding=(1, 1),
-                            groups=self.c1 + self.c2, bn_acti=True)
-
-        self.PwConv1 = Conv(self.c1 + self.c2, classes, 1, 1, padding=0, bn_acti=False)
-
-        self.DwConv2 = Conv(256 + 3, 256 + 3, (3, 3), 1, padding=(1, 1), groups=256 + 3, bn_acti=True)
-        self.PwConv2 = Conv(256 + 3, classes, 1, 1, padding=0, bn_acti=False)
-
-    def forward(self, x):
-        x1, x2 = x
-
-        x2_size = x2.size()[2:]
-
-        x1_ = self.mid_layer_1x1(x1)
-        x2_ = self.deep_layer_1x1(x2)
-
-        x2_ = F.interpolate(x2_, [x2_size[0] * 2, x2_size[1] * 2], mode='bilinear', align_corners=False)
-
-        x1_x2_cat = torch.cat([x1_, x2_], 1)
-        x1_x2_cat = self.DwConv1(x1_x2_cat)
-        x1_x2_cat = self.PwConv1(x1_x2_cat)
-        x1_x2_cat_att = torch.sigmoid(x1_x2_cat)
-
-        o = self.DwConv2(x2)
-        o = self.PwConv2(o)
-        o = F.interpolate(o, [x2_size[0] * 2, x2_size[1] * 2], mode='bilinear', align_corners=False)
-
-        o = o * x1_x2_cat_att
-
-        o = F.interpolate(o, [x2_size[0] * 8, x2_size[1] * 8], mode='bilinear', align_corners=False)
-
-        return o
-
 @BACKBONE_REGISTRY.register()
 class LMFFNetBackbone(Backbone):
     def __init__(self, block_1=3, block_2=8):
