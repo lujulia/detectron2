@@ -122,7 +122,7 @@ class PanopticLMFFNetSemSegHead(nn.Module):
         self.MAD = MAD(classes=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES)
 
         if cfg.MODEL.SEM_SEG_HEAD.LOSS_TYPE == "cross_entropy":
-            min_kept = int(cfg.SOLVER.IMS_PER_BATCH//2* cfg.INPUT.CROP.SIZE[0] * cfg.INPUT.CROP.SIZE[1] // 16) #len(args.gpus) * h * w // 16)
+            min_kept = int(cfg.SOLVER.IMS_PER_BATCH//cfg.DATALOADER.NUM_GPUS* cfg.INPUT.CROP.SIZE[0] * cfg.INPUT.CROP.SIZE[1] // 16) #len(args.gpus) * h * w // 16)
             self.loss = ProbOhemCrossEntropy2d(use_weight=True,ignore_label=ignore_value, thresh=0.7, min_kept=min_kept)
         else:
             raise ValueError("Unexpected loss type: %s" % self.loss_type)

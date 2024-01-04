@@ -76,3 +76,4 @@ def add_panoptic_lmffnet_config(cfg):
     #cfg.MODEL.PANOPTIC_DEEPLAB.SIZE_DIVISIBILITY = -1
     # Only evaluates network speed (ignores post-processing).
     cfg.MODEL.PANOPTIC_LMFFNET.BENCHMARK_NETWORK_SPEED = False
+    cfg.DATALOADER.NUM_GPUS = 2
