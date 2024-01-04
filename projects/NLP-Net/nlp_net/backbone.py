@@ -435,7 +435,7 @@ class LMFFNetBackbone(Backbone):
             return {"FFM-B1":out_ffm_b1,"FFM-B2":out_ffm_b2}, {}
     
     def output_shape(self):
-        return {"FFM-B1": ShapeSpec(channels=128+3, stride=1),"FFM-B2": ShapeSpec(channels=256+3, stride=1), "Enhance":ShapeSpec(channels=3, stride=1),"FACTOR":ShapeSpec(channels=24, stride=1)}
+        return {"FFM-B1": ShapeSpec(channels=128+3, stride=1),"FFM-B2": ShapeSpec(channels=256+3, stride=1)}
     
     def losses(self, original, enhance, factor):#, weights=None):
         loss_tv = self.L_TV(factor)
