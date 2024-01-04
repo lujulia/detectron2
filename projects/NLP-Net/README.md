@@ -12,7 +12,7 @@ To use cityscapes, prepare data follow the [tutorial](https://detectron2.readthe
 To train a model with 2 GPUs run:
 ```bash
 cd /path/to/detectron2/projects/NLP-Net
-python train_net.py --config-file configs/Cityscapes-PanopticSegmentation/panoptic_deeplab_R_52_os16_mg124_poly_90k_bs32_crop_512_1024_dsconv.yaml --num-gpus 2
+python train_net.py --config-file configs/Cityscapes-PanopticSegmentation/panoptic_lmffnet_R_52_os16_mg124_poly_90k_bs32_crop_512_1024_dsconv.yaml --num-gpus 2
 ```
 
 ## Evaluation
@@ -20,6 +20,5 @@ python train_net.py --config-file configs/Cityscapes-PanopticSegmentation/panopt
 Model evaluation can be done similarly:
 ```bash
 cd /path/to/detectron2/projects/NLP-Net
-python train_net.py --config-file configs/Cityscapes-PanopticSegmentation/panoptic_deeplab_R_52_os16_mg124_poly_90k_bs32_crop_512_1024_dsconv.yaml --eval-only MODEL.WEIGHTS /path/to/model_checkpoint
+python train_net.py --config-file configs/Cityscapes-PanopticSegmentation/panoptic_lmffnet_R_52_os16_mg124_poly_90k_bs32_crop_512_1024_dsconv.yaml --eval-only MODEL.WEIGHTS /path/to/model_checkpoint
 ```
-
