@@ -34,16 +34,15 @@ import numpy as np
 import cv2
 
 def exposure(img):
-    expo = np.random.randint(-5,2)
+    expo = np.random.randint(-4,4)
     gamma = 2.2
     row, col, dep = img.shape
     ex_img = img/255.0
     stregth = expo
-    for i in range(row):
-        for j in range(col):
-            temp = cv2.min((ex_img[i,j,:])*pow(2, stregth/gamma),1)
-            temp = cv2.max(temp,0)
-            ex_img[i,j,:] = temp.reshape(1,3)*255.0
+    temp = (ex_img)*pow(2, stregth/gamma)
+    temp[temp>=1] = 1
+    temp[temp<=0] = 0
+    ex_img = temp*255.0
     return np.round(ex_img).astype(np.float32) #ex_img
 class Clahe(T.Augmentation):
 
