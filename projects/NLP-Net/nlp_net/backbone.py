@@ -1,3 +1,10 @@
+###################################################################################################################
+#  LMFFNet: A Well-Balanced Lightweight Network for Fast and Accurate Semantic Segmentation
+#  Authors: M Shi, J Shen, Q Yi, J Weng, Z Huang, A Luo, Y Zhou
+#  Published in£ºIEEE Transactions on Neural Networks and Learning Systems
+#  Date: 2022/06/14
+#
+##################################################################################################################
 import numpy as np
 import fvcore.nn.weight_init as weight_init
 import torch
@@ -122,7 +129,7 @@ class Init_Block(nn.Module):
         self.e_conv4 = Conv(number_f, number_f, 3, 1, padding=1, bn_acti=True)
         self.e_conv5 = Conv(number_f*2, number_f, 3, 1, padding=1, bn_acti=True)
         self.e_conv6 = Conv(number_f*2, number_f, 3, 1, padding=1, bn_acti=True)
-        self.e_conv7 = Conv(number_f*2, 24, 3, 1, padding=1, bn_acti=True)
+        self.e_conv7 = Conv(number_f*2, 24, 3, 1, padding=1, bn_acti=False)
 
 		#self.maxpool = nn.MaxPool2d(2, stride=2, return_indices=False, ceil_mode=False)
 		#self.upsample = nn.UpsamplingBilinear2d(scale_factor=2)
