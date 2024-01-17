@@ -1,10 +1,3 @@
-###################################################################################################################
-#  LMFFNet: A Well-Balanced Lightweight Network for Fast and Accurate Semantic Segmentation
-#  Authors: M Shi, J Shen, Q Yi, J Weng, Z Huang, A Luo, Y Zhou
-#  Published in£ºIEEE Transactions on Neural Networks and Learning Systems
-#  Date: 2022/06/14
-#
-##################################################################################################################
 import numpy as np
 import fvcore.nn.weight_init as weight_init
 import torch
@@ -148,7 +141,7 @@ class Init_Block(nn.Module):
         x5 = self.e_conv5(torch.cat([x3,x4],1))
         # x5 = self.upsample(x5)
         x6 = self.e_conv6(torch.cat([x2,x5],1))
-
+        
         x_r = F.tanh(self.e_conv7(torch.cat([x1,x6],1)))
         r1,r2,r3,r4,r5,r6,r7,r8 = torch.split(x_r, 3, dim=1)
 
