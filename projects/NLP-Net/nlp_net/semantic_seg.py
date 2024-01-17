@@ -56,6 +56,17 @@ class BNPReLU(nn.Module):
 
         return output
 
+def init_weight(feature, conv_init, norm_layer, bn_eps, bn_momentum,
+                  **kwargs):
+    for name, m in feature.named_modules():
+        if isinstance(m, (nn.Conv2d, nn.Conv3d)):
+            conv_init(m.weight, **kwargs)
+        elif isinstance(m, norm_layer):
+            m.eps = bn_eps
+            m.momentum = bn_momentum
+            nn.init.constant_(m.weight, 1)
+            nn.init.constant_(m.bias, 0)
+
 class MAD(nn.Module):
     def __init__(self, c1=16, c2=32, classes=19):
         super(MAD, self).__init__()
@@ -125,8 +136,17 @@ class PanopticLMFFNetSemSegHead(nn.Module):
             min_kept = int(cfg.SOLVER.IMS_PER_BATCH//cfg.DATALOADER.NUM_GPUS* cfg.INPUT.CROP.SIZE[0] * cfg.INPUT.CROP.SIZE[1] // 16) #len(args.gpus) * h * w // 16)
             self.loss = ProbOhemCrossEntropy2d(use_weight=True,ignore_label=ignore_value, thresh=0.7, min_kept=min_kept)
         else:
-            raise ValueError("Unexpected loss type: %s" % self.loss_type)
-    
+           raise ValueError("Unexpected loss type: %s" % self.loss_type)
+        self.apply(self._init_weights)
+        
+    def _init_weights(self, module):
+        if isinstance(module, list):
+            for feature in module:
+                init_weight(feature, nn.init.kaiming_normal_, nn.BatchNorm2d, 1e-3, 0.1)
+
+        else:
+            init_weight(module, nn.init.kaiming_normal_, nn.BatchNorm2d, 1e-3, 0.1)             
+
     def forward(self, features, targets=None):#, weights=None):
         """
         Returns:
