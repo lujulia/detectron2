@@ -57,6 +57,17 @@ class BNPReLU(nn.Module):
         output = self.acti(output)
 
         return output
+    
+def init_weight(feature, conv_init, norm_layer, bn_eps, bn_momentum,
+                  **kwargs):
+    for name, m in feature.named_modules():
+        if isinstance(m, (nn.Conv2d, nn.Conv3d)):
+            conv_init(m.weight, **kwargs)
+        elif isinstance(m, norm_layer):
+            m.eps = bn_eps
+            m.momentum = bn_momentum
+            nn.init.constant_(m.weight, 1)
+            nn.init.constant_(m.bias, 0)
 
 class MAD(nn.Module):
     def __init__(self, c1=16, c2=32, classes=19):
@@ -126,7 +137,16 @@ class PanopticLMFFNetInsEmbedHead(nn.Module):
 
         self.center_loss = nn.MSELoss(reduction="none")
         self.offset_loss = nn.L1Loss(reduction="none")
+        self.apply(self._init_weights)
+        
+    def _init_weights(self, module):
+        if isinstance(module, list):
+            for feature in module:
+                init_weight(feature, nn.init.kaiming_normal_, nn.BatchNorm2d, 1e-3, 0.1)
 
+        else:
+            init_weight(module, nn.init.kaiming_normal_, nn.BatchNorm2d, 1e-3, 0.1)             
+    
     def forward( 
         self,
         features,
