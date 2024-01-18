@@ -1,7 +1,7 @@
 import numpy as np
 import fvcore.nn.weight_init as weight_init
 import torch
-import torch.nn.functional as F
+#import torch.nn.functional as F
 from torch import nn
 from detectron2.utils.registry import Registry
 from detectron2.layers import ShapeSpec
@@ -78,6 +78,18 @@ class BNPReLU(nn.Module):
 
         return output
     
+class BNTanh(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.bn = nn.BatchNorm2d(24, eps=1e-3)
+        self.acti = nn.Tanh()
+
+    def forward(self, input):
+        output = self.bn(input)
+        output = self.acti(output)
+
+        return output
+    
 def init_weight(feature, conv_init, norm_layer, bn_eps, bn_momentum,
                   **kwargs):
     for name, m in feature.named_modules():
@@ -123,7 +135,7 @@ class Init_Block(nn.Module):
         self.e_conv5 = Conv(number_f*2, number_f, 3, 1, padding=1, bn_acti=True)
         self.e_conv6 = Conv(number_f*2, number_f, 3, 1, padding=1, bn_acti=True)
         self.e_conv7 = Conv(number_f*2, 24, 3, 1, padding=1, bn_acti=False)
-
+        self.e_tanh = BNTanh()
 		#self.maxpool = nn.MaxPool2d(2, stride=2, return_indices=False, ceil_mode=False)
 		#self.upsample = nn.UpsamplingBilinear2d(scale_factor=2)
         #self.relu = nn.ReLU(inplace=True)
@@ -142,7 +154,7 @@ class Init_Block(nn.Module):
         # x5 = self.upsample(x5)
         x6 = self.e_conv6(torch.cat([x2,x5],1))
         
-        x_r = F.tanh(self.e_conv7(torch.cat([x1,x6],1)))
+        x_r = self.e_tanh(self.e_conv7(torch.cat([x1,x6],1)))
         r1,r2,r3,r4,r5,r6,r7,r8 = torch.split(x_r, 3, dim=1)
 
         x = x + r1*(torch.pow(x,2)-x)
