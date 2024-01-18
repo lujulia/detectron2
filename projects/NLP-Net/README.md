@@ -1,4 +1,4 @@
-# Night Lightweight-Panoptic (NLP-Net): 
+# Night Lightweight Multiscale-Feature-Fusion Panoptic (NLP-Net): 
 
 I-CHEN LU
 
