@@ -34,7 +34,7 @@ import numpy as np
 import cv2
 
 def exposure(img):
-    expo = np.random.randint(-4,4)
+    expo = int(np.random.uniform(-4,4))#np.random.randint(-4,4)
     gamma = 2.2
     row, col, dep = img.shape
     ex_img = img/255.0
