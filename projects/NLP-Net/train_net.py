@@ -34,54 +34,49 @@ import numpy as np
 import cv2
 
 def exposure(img):
-    expo = np.random.randint(-4,4)
+    expo = np.random.randint(-5,2)
     gamma = 2.2
-    row, col, dep = img.shape
     ex_img = img/255.0
     stregth = expo
-    temp = (ex_img)*pow(2, stregth/gamma)
-    temp[temp>=1] = 1
-    temp[temp<=0] = 0
+    temp = (ex_img)*np.pow(2, stregth/gamma)
+    temp[np.isnan(temp)] = 0.0
+    temp[np.isinf(temp)] = 1.0
+    temp[temp>=1] = 1.0
+    temp[temp<=0] = 0.0
     ex_img = temp*255.0
-    return np.round(ex_img).astype(np.float32) #ex_img
-class Clahe(T.Augmentation):
+    #print("ex_img: ",ex_img.shape)
+    return np.round(ex_img).astype('uint8')#float32) #ex_img
 
+class Custom(T.Augmentation):
     def __init__(self):
         self._init(locals())
 
     def get_transform(self):
-        return ClaheTransform()
+        return CustomTransform()
     
-class ClaheTransform(T.Transform):
 
+class CustomTransform(T.Transform):
     def __init__(self):
         super().__init__()
         self._set_attributes(locals())
 
     def apply_image(self, img):
-        #transform = Augmentation.CLAHE(clip_limit=self.clip_lim, 
-                            #tile_grid_size=(self.win_size, self.win_size))
- 
-        augmented_image = exposure(img)#'image']
-
+        augmented_image = exposure(img)
         return augmented_image
 
     def apply_coords(self, coords):
-        #coords[:, 0] = coords[:, 0] * (self.new_w * 1.0 / self.w)
-        #coords[:, 1] = coords[:, 1] * (self.new_h * 1.0 / self.h)
         return coords
 
     def apply_segmentation(self, segmentation):
-        #segmentation = self.apply_image(segmentation)
         return segmentation
 
-    def inverse(self):
-        return ClaheTransform()
+    #def inverse(self):
+    #    return ClaheTransform()
 
 
 def build_sem_seg_train_aug(cfg):
     augs = [
-        Clahe(),
+        Custom(),
         T.ResizeShortestEdge(
             cfg.INPUT.MIN_SIZE_TRAIN, cfg.INPUT.MAX_SIZE_TRAIN, cfg.INPUT.MIN_SIZE_TRAIN_SAMPLING
         )

@@ -137,13 +137,12 @@ class PanopticLMFFNetSemSegHead(nn.Module):
             self.loss = ProbOhemCrossEntropy2d(use_weight=True,ignore_label=ignore_value, thresh=0.7, min_kept=min_kept)
         else:
            raise ValueError("Unexpected loss type: %s" % self.loss_type)
-        self.apply(self._init_weights)
+        #self.apply(self._init_weights)
         
     def _init_weights(self, module):
         if isinstance(module, list):
             for feature in module:
                 init_weight(feature, nn.init.kaiming_normal_, nn.BatchNorm2d, 1e-3, 0.1, mode='fan_in')
-
         else:
             init_weight(module, nn.init.kaiming_normal_, nn.BatchNorm2d, 1e-3, 0.1, mode='fan_in')             
 

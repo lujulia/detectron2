@@ -1,7 +1,7 @@
 import numpy as np
 import fvcore.nn.weight_init as weight_init
 import torch
-#import torch.nn.functional as F
+import torch.nn.functional as F
 from torch import nn
 from detectron2.utils.registry import Registry
 from detectron2.layers import ShapeSpec
@@ -100,113 +100,44 @@ def init_weight(feature, conv_init, norm_layer, bn_eps, bn_momentum,
             m.momentum = bn_momentum
             nn.init.constant_(m.weight, 1)
             nn.init.constant_(m.bias, 0)
-"""
-def weights_init(m):
-    classname = m.__class__.__name__
-    if classname.find('conv') != -1:
-        m.weight.data.normal_(0.0, 0.02)
-    elif classname.find('BatchNorm') != -1:
-        m.weight.data.normal_(1e-3, 0.1)
-        m.bias.data.fill_(0)
-"""
-"""
-class Init_Block(nn.Module):
-    def __init__(self):
-        super(Init_Block, self).__init__()
-        self.init_conv = nn.Sequential(
-            Conv(3, 32, 3, 2, padding=1, bn_acti=True),
-            Conv(32, 32, 3, 1, padding=1, bn_acti=True),
-            Conv(32, 32, 3, 1, padding=1, bn_acti=True),
-        )
 
-    def forward(self, x):
-        o = self.init_conv(x)
-        return o
-"""
 class Init_Block(nn.Module):
     def __init__(self):
         super(Init_Block, self).__init__()
         number_f = 32
-        self.conv = Conv(6, number_f, 3, 2, padding=1, bn_acti=True)
-        self.e_conv1 = Conv(3, number_f, 3, 1, padding=1, bn_acti=True)
-        self.e_conv2 = Conv(number_f, number_f, 3, 1, padding=1, bn_acti=True)
-        self.e_conv3 = Conv(number_f, number_f, 3, 1, padding=1, bn_acti=True)
-        self.e_conv4 = Conv(number_f, number_f, 3, 1, padding=1, bn_acti=True)
-        self.e_conv5 = Conv(number_f*2, number_f, 3, 1, padding=1, bn_acti=True)
-        self.e_conv6 = Conv(number_f*2, number_f, 3, 1, padding=1, bn_acti=True)
-        self.e_conv7 = Conv(number_f*2, 24, 3, 1, padding=1, bn_acti=False)
-        self.e_tanh = BNTanh()
-		#self.maxpool = nn.MaxPool2d(2, stride=2, return_indices=False, ceil_mode=False)
-		#self.upsample = nn.UpsamplingBilinear2d(scale_factor=2)
-        #self.relu = nn.ReLU(inplace=True)
-
-    def forward(self, x):
-        x_o = x
-        x1 = self.e_conv1(x)
-        # p1 = self.maxpool(x1)
-        x2 = self.e_conv2(x1)
-        # p2 = self.maxpool(x2)
-        x3 = self.e_conv3(x2)
-        # p3 = self.maxpool(x3)
-        x4 = self.e_conv4(x3)
-
-        x5 = self.e_conv5(torch.cat([x3,x4],1))
-        # x5 = self.upsample(x5)
-        x6 = self.e_conv6(torch.cat([x2,x5],1))
-        
-        x_r = self.e_tanh(self.e_conv7(torch.cat([x1,x6],1)))
-        r1,r2,r3,r4,r5,r6,r7,r8 = torch.split(x_r, 3, dim=1)
-
-        x = x + r1*(torch.pow(x,2)-x)
-        x = x + r2*(torch.pow(x,2)-x)
-        x = x + r3*(torch.pow(x,2)-x)
-        enhance_image_1 = x + r4*(torch.pow(x,2)-x)		
-        x = enhance_image_1 + r5*(torch.pow(enhance_image_1,2)-enhance_image_1)		
-        x = x + r6*(torch.pow(x,2)-x)	
-        x = x + r7*(torch.pow(x,2)-x)
-        enhance_image = x + r8*(torch.pow(x,2)-x)
-        r = torch.cat([r1,r2,r3,r4,r5,r6,r7,r8],1)
-        x_new = torch.cat([enhance_image,x_o],1)
-        o = self.conv(x_new)
-        o = self.e_conv2(o)
-        o = self.e_conv3(o)
-        return o,enhance_image,r
-"""
-class Init_Block(nn.Module):
-    def __init__(self):
-        super(Init_Block, self).__init__()
-        number_f = 32
-        self.conv = nn.Conv2d(6,number_f,3,2,1,bias=True) 
-        self.e_conv1 = nn.Conv2d(3,number_f,3,1,1,bias=True) 
-        self.e_conv2 = nn.Conv2d(number_f,number_f,3,1,1,bias=True) 
-        self.e_conv3 = nn.Conv2d(number_f,number_f,3,1,1,bias=True) 
-        self.e_conv4 = nn.Conv2d(number_f,number_f,3,1,1,bias=True) 
-        self.e_conv5 = nn.Conv2d(number_f*2,number_f,3,1,1,bias=True) 
-        self.e_conv6 = nn.Conv2d(number_f*2,number_f,3,1,1,bias=True) 
-        self.e_conv7 = nn.Conv2d(number_f*2,24,3,1,1,bias=True) 
-
-		#self.maxpool = nn.MaxPool2d(2, stride=2, return_indices=False, ceil_mode=False)
-		#self.upsample = nn.UpsamplingBilinear2d(scale_factor=2)
+        self.conv    = nn.Conv2d(6, number_f, 3, 2, padding=1,bias=True)
+        self.e_conv1 = nn.Conv2d(3, number_f, 3, 1, padding=1,bias=True)
+        self.e_conv2 = nn.Conv2d(number_f, number_f, 3, 1, padding=1,bias=True)
+        self.e_conv3 = nn.Conv2d(number_f, number_f, 3, 1, padding=1,bias=True)
+        self.e_conv4 = nn.Conv2d(number_f, number_f, 3, 1, padding=1,bias=True)
+        self.e_conv5 = nn.Conv2d(number_f*2, number_f, 3, 1, padding=1,bias=True)
+        self.e_conv6 = nn.Conv2d(number_f*2, number_f, 3, 1, padding=1,bias=True)
+        self.e_conv7 = nn.Conv2d(number_f*2, 24, 3, 1, padding=1,bias=True)
         self.relu = nn.ReLU(inplace=True)
+        #self.prelu = nn.PReLU(32)
+        #self.bn = nn.BatchNorm2d(32)
+        self.apply(self._init_weights)
+
+    def _init_weights(self, module):
+        if isinstance(module, nn.Conv2d):
+            module.weight.data.normal_(0.0, 0.02)
+        elif isinstance(module, nn.BatchNorm2d):
+            module.weight.data.normal_(1.0, 0.02)
+            module.bias.data.fill_(0)
 
     def forward(self, x):
         x_o = x
         x1 = self.relu(self.e_conv1(x))
-        # p1 = self.maxpool(x1)
         x2 = self.relu(self.e_conv2(x1))
-        # p2 = self.maxpool(x2)
         x3 = self.relu(self.e_conv3(x2))
-        # p3 = self.maxpool(x3)
         x4 = self.relu(self.e_conv4(x3))
 
         x5 = self.relu(self.e_conv5(torch.cat([x3,x4],1)))
-        # x5 = self.upsample(x5)
         x6 = self.relu(self.e_conv6(torch.cat([x2,x5],1)))
-
         x_r = F.tanh(self.e_conv7(torch.cat([x1,x6],1)))
         r1,r2,r3,r4,r5,r6,r7,r8 = torch.split(x_r, 3, dim=1)
 
-        x = x + r1*(torch.pow(x,2)-x)
+        x = x_o + r1*(torch.pow(x_o,2)-x_o)
         x = x + r2*(torch.pow(x,2)-x)
         x = x + r3*(torch.pow(x,2)-x)
         enhance_image_1 = x + r4*(torch.pow(x,2)-x)		
@@ -220,8 +151,6 @@ class Init_Block(nn.Module):
         o = self.relu(self.e_conv2(o))
         o = self.relu(self.e_conv3(o))
         return o,enhance_image,r
-"""
-
 
 class SEM_B(nn.Module):
     def __init__(self, nIn, d=1, kSize=3, dkSize=3):
@@ -403,14 +332,13 @@ class SEM_B_Block2(nn.Module):
         o = self.SEM_B8(x)
         return o
 
-
 @BACKBONE_REGISTRY.register()
 class LMFFNetBackbone(Backbone):
     def __init__(self, block_1=3, block_2=8):
         super().__init__()
         self.block_1 = block_1
         self.block_2 = block_2
-        self.Init_Block = Init_Block()#.apply(weights_init)
+        self.Init_Block = Init_Block()
 
         self.down_1 = InputInjection(1)  # down-sample the image 1 times
         self.down_2 = InputInjection(2)  # down-sample the image 2 times
@@ -434,7 +362,7 @@ class LMFFNetBackbone(Backbone):
         self.L_spa = L_spa()
         self.L_exp = L_exp(16,0.6)
         self.L_TV = L_TV()
-        self.apply(self._init_weights)
+        #self.apply(self._init_weights)
 
     def _init_weights(self, module):
         if isinstance(module, list):
