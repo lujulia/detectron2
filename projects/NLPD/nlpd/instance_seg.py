@@ -137,7 +137,7 @@ class PanopticLMFFNetInsEmbedHead(nn.Module):
 
         self.center_loss = nn.MSELoss(reduction="none")
         self.offset_loss = nn.L1Loss(reduction="none")
-        self.apply(self._init_weights)
+        #self.apply(self._init_weights)
         
     def _init_weights(self, module):
         if isinstance(module, list):
@@ -170,7 +170,7 @@ class PanopticLMFFNetInsEmbedHead(nn.Module):
                 None,
                 None,
                 self.center_losses(center, center_targets, center_weights),
-                self.offset_losses(offset, offset_targets, offset_weights)
+                self.offset_losses(offset, offset_targets, offset_weights),
             )
         else:
             return center, offset, {}, {}

@@ -141,7 +141,7 @@ class PanopticLMFFNetDepthEmbedHead(nn.Module):
         else:
             raise ValueError("Unexpected loss type: %s" % loss_type)
 
-        self.apply(self._init_weights)
+        #self.apply(self._init_weights)
         
     def _init_weights(self, module):
         if isinstance(module, list):
