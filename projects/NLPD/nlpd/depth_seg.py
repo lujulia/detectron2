@@ -139,7 +139,7 @@ class PanopticLMFFNetDepthEmbedHead(nn.Module):
         #elif loss_type == "dorn":
         #    self.loss = OrdinalRegressionLoss(ord_num=self.ord_num, beta=self.beta, discretization="SID")
         else:
-            raise ValueError("Unexpected loss type: %s" % loss_type)
+            raise ValueError("Unexpected loss type: %s" % self.loss_type)
 
         #self.apply(self._init_weights)
         
