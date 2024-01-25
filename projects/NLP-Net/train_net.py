@@ -38,7 +38,7 @@ def exposure(img):
     gamma = 2.2
     ex_img = img/255.0
     stregth = expo
-    temp = (ex_img)*np.pow(2, stregth/gamma)
+    temp = (ex_img)*pow(2, stregth/gamma)
     temp[np.isnan(temp)] = 0.0
     temp[np.isinf(temp)] = 1.0
     temp[temp>=1] = 1.0
