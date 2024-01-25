@@ -18,9 +18,10 @@ from detectron2.evaluation import (
     CityscapesInstanceEvaluator,
     CityscapesSemSegEvaluator,
     COCOEvaluator,
-    COCOPanopticEvaluator,
+    #COCOPanopticEvaluator,
     DatasetEvaluators,
 )
+from nlpd.panoptic_evaluation import COCOPanopticEvaluator
 
 from nlpd.build_solver import build_lr_scheduler
 from nlpd.dataset_mapper import PanopticLMFFNetDatasetMapper
