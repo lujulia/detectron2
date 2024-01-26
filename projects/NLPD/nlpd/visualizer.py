@@ -481,7 +481,7 @@ class Visualizer:
             )
         return self.output
 
-    def draw_panoptic_seg(self, panoptic_seg, segments_info, area_threshold=None, alpha=0.7):
+    def draw_panoptic_seg(self, panoptic_seg, segments_info, area_threshold=None, alpha=0.6):
         """
         Draw panoptic prediction annotations or results.
 
@@ -754,7 +754,7 @@ class Visualizer:
                 height_ratio = (y1 - y0) / np.sqrt(self.output.height * self.output.width)
                 lighter_color = self._change_color_brightness(color, brightness_factor=0.7)
                 font_size = (
-                    np.clip((height_ratio - 0.02) / 0.08 + 1, 1.2, 2)
+                    np.clip((height_ratio - 0.02) / 0.08 + 1, 1.2, 4)
                     * 0.5
                     * self._default_font_size
                 )
@@ -1155,9 +1155,9 @@ class Visualizer:
         if edge_color is None:
             # make edge color darker than the polygon color
             if alpha > 0.8:
-                edge_color = self._change_color_brightness(color, brightness_factor=-0.7)
+                edge_color = self._change_color_brightness(color, brightness_factor=1.0)
             else:
-                edge_color = color
+                edge_color = self._change_color_brightness(color, brightness_factor=1.0)
         edge_color = mplc.to_rgb(edge_color) + (1,)
 
         polygon = mpl.patches.Polygon(
@@ -1277,7 +1277,8 @@ class Visualizer:
                 # median is more stable than centroid
                 # center = centroids[largest_component_id]
                 center = np.median((cc_labels == cid).nonzero(), axis=1)[::-1]
-                self.draw_text(text, center, color=color)
+                #self.draw_text(text, center, color=color)
+                self.draw_text(text, center, color=color, font_size=self._default_font_size*2)
 
     def _convert_keypoints(self, keypoints):
         if isinstance(keypoints, Keypoints):

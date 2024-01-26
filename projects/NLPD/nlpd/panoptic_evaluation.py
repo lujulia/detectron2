@@ -129,7 +129,7 @@ class COCOPanopticEvaluator(DatasetEvaluator):
             # Get Depth Estimation in instance(Avg out)
             for seg in segments_info:
                 seg["depth"] = depth_map[ panoptic_img == seg["id"] ].mean().item()
-            
+            """
             self._metadata.stuff_colors[ self._metadata.stuff_classes.index("sidewalk") ] = (102, 66, 102)# (214, 213, 183)
             # self._metadata.stuff_colors[ self._metadata.stuff_classes.index("road")     ] = (222, 211, 140)
             self._metadata.stuff_colors[ self._metadata.stuff_classes.index("terrain")  ] = (137, 190, 178)
@@ -137,7 +137,7 @@ class COCOPanopticEvaluator(DatasetEvaluator):
             self._metadata.stuff_colors[ self._metadata.stuff_classes.index("vegetation")  ] = (63, 79, 57) # (102, 128,  89)
             self._metadata.stuff_colors[ self._metadata.stuff_classes.index("traffic light")  ] = (240, 222, 54)# (113, 104, 55) # (102, 128,  89)
             self._metadata.stuff_colors[ self._metadata.stuff_classes.index("traffic sign")   ] = (113, 104, 55) # (102, 128,  89)
-
+            """
             # Output Panoptic Result
             with open(os.path.join(self._output_dir, file_name_png), "wb") as f:#self.pred_dir
                 f.write(panoptic_data)
@@ -151,17 +151,15 @@ class COCOPanopticEvaluator(DatasetEvaluator):
             vis_output = visualizer.draw_panoptic_seg_predictions(torch.from_numpy(panoptic_img), segments_info)
             vis_output.save(os.path.join(self._output_dir, file_name_pan))#self.pred_dir
              
-            print("PathManager.get_local_path: ",PathManager.get_local_path(self._metadata.panoptic_root))
-            gt_depth_dir = PathManager.get_local_path(self._metadata.panoptic_root)#"/home/spiderkiller/cityscapes/disparity/val/"
-            camera_dir   = PathManager.get_local_path(self._metadata.panoptic_root)#"/home/spiderkiller/cityscapes/camera/val/"
-            #gt_json = PathManager.get_local_path(self._metadata.panoptic_json)
-            #gt_folder = PathManager.get_local_path(self._metadata.panoptic_root)
-
+            gt_path = self._metadata.panoptic_root.split('/')[:-2]
+            gt_path = '/'.join(gt_path)
+            gt_depth_dir = os.path.join(gt_path,"disparity","val")
+            gt_camera_dir = os.path.join(gt_path,"camera","val")
 
             # Get Depth Estimation Evaluation
             pd_depth_path = os.path.join(self._output_dir, "_".join(file_name.split("_")[:3]) + "_leftImg8bit_depth.png")
             gt_depth_path = os.path.join(gt_depth_dir, file_name.split("_")[0], "_".join(file_name.split("_")[:3]) + "_disparity.png")#self.pred_dir
-            camera_path   = os.path.join(camera_dir  , file_name.split("_")[0], "_".join(file_name.split("_")[:3]) + "_camera.json")
+            camera_path   = os.path.join(gt_camera_dir  , file_name.split("_")[0], "_".join(file_name.split("_")[:3]) + "_camera.json")
             # print(f"gt_depth_path = {gt_depth_path}")
             # print(f"camera_path = {camera_path}")
             camera        = json.load( open(camera_path) )
@@ -230,7 +228,7 @@ class COCOPanopticEvaluator(DatasetEvaluator):
 
             with open(gt_json, "r") as f:
                 json_data = json.load(f)
-            json_data["annotations"] = self._predictions
+                json_data["annotations"] = self._predictions
 
             output_dir = self._output_dir or pred_dir
             predictions_json = os.path.join(output_dir, "predictions.json")
