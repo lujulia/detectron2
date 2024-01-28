@@ -1,4 +1,4 @@
-# Night-time Lightweight Multiscale-Feature-Fusion Panoptic Depth (NLPD):
+# NLPD :
 
 I-CHEN LU
 
