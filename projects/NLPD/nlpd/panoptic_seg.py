@@ -220,5 +220,4 @@ class PanopticLMFFNet(nn.Module):
                         instances.append(instance)
                 if len(instances) > 0:
                     processed_results[-1]["instances"] = Instances.cat(instances)
-
         return processed_results

@@ -481,7 +481,7 @@ class Visualizer:
             )
         return self.output
 
-    def draw_panoptic_seg(self, panoptic_seg, segments_info, area_threshold=None, alpha=0.6):
+    def draw_panoptic_seg(self, panoptic_seg, panoptic_depth, segments_info, area_threshold=None, alpha=0.6):
         """
         Draw panoptic prediction annotations or results.
 
@@ -498,7 +498,6 @@ class Visualizer:
             output (VisImage): image object with visualizations.
         """
         pred = _PanopticPrediction(panoptic_seg, segments_info, self.metadata)
-
         if self._instance_mode == ColorMode.IMAGE_BW:
             self.output.reset_image(self._create_grayscale_image(pred.non_empty_mask()))
 
@@ -542,6 +541,9 @@ class Visualizer:
         #except AttributeError:
         #    colors = None
         # Add depth to labels
+        for seg in sinfo:
+            seg["depth"] = panoptic_depth[ panoptic_seg == seg["id"] ].mean().item()
+
         depths = [x["depth"] for x in sinfo]
         labels = [f"{label}\n{round(depths[i], 1)}" for i, label in enumerate(labels)]
         

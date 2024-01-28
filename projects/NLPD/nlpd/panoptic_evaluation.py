@@ -19,7 +19,7 @@ from detectron2.utils.file_io import PathManager
 from detectron2.evaluation.evaluator import DatasetEvaluator
 
 #from detectron2.utils.visualizer import Visualizer, ColorMode
-from nlpd.visualizer import Visualizer, ColorMode
+from .visualizer import Visualizer, ColorMode
 import torch
 import cv2
 
@@ -127,17 +127,9 @@ class COCOPanopticEvaluator(DatasetEvaluator):
 
             segments_info = [self._convert_category_id(x) for x in segments_info]
             # Get Depth Estimation in instance(Avg out)
-            for seg in segments_info:
-                seg["depth"] = depth_map[ panoptic_img == seg["id"] ].mean().item()
-            """
-            self._metadata.stuff_colors[ self._metadata.stuff_classes.index("sidewalk") ] = (102, 66, 102)# (214, 213, 183)
-            # self._metadata.stuff_colors[ self._metadata.stuff_classes.index("road")     ] = (222, 211, 140)
-            self._metadata.stuff_colors[ self._metadata.stuff_classes.index("terrain")  ] = (137, 190, 178)
-            # self._metadata.stuff_colors[ self._metadata.stuff_classes.index("terrain")  ] = (222, 211, 140)
-            self._metadata.stuff_colors[ self._metadata.stuff_classes.index("vegetation")  ] = (63, 79, 57) # (102, 128,  89)
-            self._metadata.stuff_colors[ self._metadata.stuff_classes.index("traffic light")  ] = (240, 222, 54)# (113, 104, 55) # (102, 128,  89)
-            self._metadata.stuff_colors[ self._metadata.stuff_classes.index("traffic sign")   ] = (113, 104, 55) # (102, 128,  89)
-            """
+            #for seg in segments_info:
+            #    seg["depth"] = depth_map[ panoptic_img == seg["id"] ].mean().item()
+
             # Output Panoptic Result
             with open(os.path.join(self._output_dir, file_name_png), "wb") as f:#self.pred_dir
                 f.write(panoptic_data)
@@ -148,7 +140,7 @@ class COCOPanopticEvaluator(DatasetEvaluator):
             
             # Output Panoptic DepthLab Result
             visualizer = Visualizer(input['image'].permute(1, 2, 0).cpu().numpy(), self._metadata, instance_mode = ColorMode.IMAGE)
-            vis_output = visualizer.draw_panoptic_seg_predictions(torch.from_numpy(panoptic_img), segments_info)
+            vis_output = visualizer.draw_panoptic_seg_predictions(torch.from_numpy(panoptic_img),depth_map, segments_info)
             vis_output.save(os.path.join(self._output_dir, file_name_pan))#self.pred_dir
              
             gt_path = self._metadata.panoptic_root.split('/')[:-2]
@@ -160,8 +152,7 @@ class COCOPanopticEvaluator(DatasetEvaluator):
             pd_depth_path = os.path.join(self._output_dir, "_".join(file_name.split("_")[:3]) + "_leftImg8bit_depth.png")
             gt_depth_path = os.path.join(gt_depth_dir, file_name.split("_")[0], "_".join(file_name.split("_")[:3]) + "_disparity.png")#self.pred_dir
             camera_path   = os.path.join(gt_camera_dir  , file_name.split("_")[0], "_".join(file_name.split("_")[:3]) + "_camera.json")
-            # print(f"gt_depth_path = {gt_depth_path}")
-            # print(f"camera_path = {camera_path}")
+           
             camera        = json.load( open(camera_path) )
 
             # Process the ground truth depth map
@@ -299,8 +290,6 @@ def calculate_rae(gt_depth, pd_depth):
     return abs_error_rel
 
 def calculate_irmse(gt_depth, pd_depth):    
-    # print(f"np.any(gt_depth == 0) = {np.any(gt_depth == 0)}")
-    # print(f"np.any(pd_depth == 0) = {np.any(pd_depth == 0)}")
     # Calculate inverse depth arrays
     inv_gt_depth = 1.0 / gt_depth
     inv_pd_depth = 1.0 / pd_depth
