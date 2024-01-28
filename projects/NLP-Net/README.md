@@ -9,6 +9,7 @@ To use cityscapes, prepare data follow the [tutorial](https://detectron2.readthe
 
 
 ## Datasets
+```bash
 cityscapes/
   gtFine/
     train/
@@ -29,6 +30,7 @@ cityscapes/
     train/
     val/
     test/
+```
 
 ## Training
 
